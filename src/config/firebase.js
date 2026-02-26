@@ -6,6 +6,14 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let initialized = false;
 
+/** Normalize private_key: env vars often store \\n instead of actual newlines (causes Invalid JWT Signature) */
+function normalizePrivateKey(cred) {
+  if (cred?.private_key && typeof cred.private_key === 'string') {
+    cred.private_key = cred.private_key.replace(/\\n/g, '\n');
+  }
+  return cred;
+}
+
 function tryParseKey(key) {
   if (!key || typeof key !== 'string') return null;
   const trimmed = key.trim();
@@ -13,7 +21,7 @@ function tryParseKey(key) {
   try {
     // Handle multi-line JSON (e.g. from .env copy-paste or Render env)
     const normalized = trimmed.replace(/\r\n/g, '\n').replace(/\n/g, ' ');
-    return JSON.parse(normalized);
+    return normalizePrivateKey(JSON.parse(normalized));
   } catch {
     return null;
   }
@@ -30,7 +38,7 @@ export function initFirebase() {
       const keyPath = path.join(__dirname, '../../serviceAccountKey.json');
       try {
         const data = fs.readFileSync(keyPath, 'utf8');
-        cred = JSON.parse(data);
+        cred = normalizePrivateKey(JSON.parse(data));
       } catch {}
     }
     if (cred) {
