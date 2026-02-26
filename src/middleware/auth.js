@@ -13,7 +13,7 @@ export function signAuthToken(user) {
 
 export function signPhoneAuthToken(phone, role) {
   return jwt.sign(
-    { phone, role, type: 'phone' },
+    { userId: phone, phone, role, type: 'phone' },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -30,7 +30,13 @@ export async function requireAuth(req, res, next) {
     }
     const payload = jwt.verify(token, JWT_SECRET);
     if (payload.type === 'phone') {
-      req.user = { id: payload.phone, phone: payload.phone, role: payload.role };
+      req.user = {
+        id: payload.userId || payload.phone,
+        userId: payload.userId || payload.phone,
+        phone: payload.phone,
+        phoneNumber: payload.phone,
+        role: payload.role,
+      };
       return next();
     }
     const user = await User.findById(payload.sub);

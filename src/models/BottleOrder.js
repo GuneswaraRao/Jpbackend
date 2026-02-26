@@ -16,6 +16,8 @@ const bottleOrderItemSchema = new mongoose.Schema(
 const bottleOrderSchema = new mongoose.Schema(
   {
     orderNo: { type: String, required: true },
+    userId: { type: String, index: true },
+    userPhone: { type: String, index: true },
     billId: String,
     customerName: { type: String, required: true },
     customerPhone: { type: String, required: true },
@@ -26,7 +28,7 @@ const bottleOrderSchema = new mongoose.Schema(
     depositAmount: Number,
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'ready_to_dispatch', 'completed', 'delivered', 'returned', 'cancelled'],
+      enum: ['pending', 'accepted', 'ready_to_dispatch', 'completed', 'delivered', 'returned', 'cancelled', 'Pending', 'Processing', 'Delivered', 'Complete', 'Cancelled'],
       default: 'pending',
     },
     orderDate: { type: Date, default: Date.now },

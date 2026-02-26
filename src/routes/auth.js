@@ -2,6 +2,7 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
+import { PhoneUser } from '../models/PhoneUser.js';
 import { requireAuth, signAuthToken, signPhoneAuthToken } from '../middleware/auth.js';
 
 const router = Router();
@@ -134,6 +135,12 @@ router.post('/request-otp', async (req, res) => {
     if (!phone) {
       return res.status(400).json({ error: 'Phone required' });
     }
+    const role = getRole(phone);
+    await PhoneUser.findOneAndUpdate(
+      { phone },
+      { phone, phoneNumber: phone, role },
+      { upsert: true, new: true }
+    );
     const token = fcmToken || 'dev-skip';
     const otp = generateOtp();
     otpStore.set(phone, {
@@ -170,10 +177,21 @@ router.post('/verify-otp', async (req, res) => {
     }
     otpStore.delete(phone);
     const role = getRole(phone);
+    const phoneUser = await PhoneUser.findOneAndUpdate(
+      { phone },
+      { phone, phoneNumber: phone, role },
+      { upsert: true, new: true }
+    );
     const token = signPhoneAuthToken(phone, role);
     res.json({
       token,
-      user: { id: phone, phone, role },
+      user: {
+        id: phoneUser?._id?.toString() || phone,
+        uid: phone,
+        phone,
+        phoneNumber: phone,
+        role,
+      },
       role,
     });
   } catch (err) {

@@ -20,6 +20,8 @@ const billItemSchema = new mongoose.Schema(
 const billSchema = new mongoose.Schema(
   {
     billNo: { type: String, required: true },
+    userId: { type: String, index: true },
+    userPhone: { type: String, index: true },
     invoiceNumber: { type: String, default: '' },
     items: [billItemSchema],
     subtotal: Number,
